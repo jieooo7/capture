@@ -38,36 +38,13 @@ public class WebEvidAction {
 	@RequestMapping("/api/snapshot.action")
 	@ResponseBody
 	public DeferredResult<String> snapshot(String webUrl, String userId) {
-//		WebAsyncTask
 		DeferredResult<String> deferredResult = new DeferredResult<String>();
-		deferredResult.setResult(snapshotService.doSnapshot(webUrl, userId));
-//		new Thread(new Runnable(){
-//
-//			@Override
-//			public void run() {
-//				deferredResult.setResult(snapshotService.doSnapshot(webUrl,userId));
-//			}
-//		}).start();
-		logger.info("请求线程>>>>>"+Thread.currentThread().getName());
+		snapshotService.doSnapshot(webUrl, userId,deferredResult);
+		logger.info("请求线程>>>>>=="+Thread.currentThread().getName());
 		return deferredResult;
 
 	}
 
-	@RequestMapping("/api/snapshot")
-	@ResponseBody
-	public WebAsyncTask snapshotTest(String webUrl, String userId) {
-		Callable<String> callable = new Callable<String>() {
-
-			@Override
-			public String call() throws Exception {
-				return snapshotService.doSnapshot(webUrl, userId);
-			}
-		};
-
-		logger.info("请求线程>>>>>"+Thread.currentThread().getName());
-		return new WebAsyncTask(callable);
-
-	}
 
 
 }

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -52,38 +53,17 @@ public class SnapshotServiceImpl implements ISnapshotService{
 
 
 	@Override
-	public String doSnapshot(String webUrl, String userId) {
+	public void doSnapshot(String webUrl, String userId,DeferredResult<String> deferredResult) {
 
-		Callable<String> myCallable = new Callable<String>(){
-
+		Runnable runnable=new Runnable() {
 			@Override
-			public String call() throws Exception {
-				String res = doSnapshotActual(webUrl,userId);
-				logger.info(Thread.currentThread().getName());
-				return res;
+			public void run() {
+				logger.info("处理线程>>>>>"+Thread.currentThread().getName());
+				deferredResult.setResult(doSnapshotActual(webUrl,userId));
 			}
 		};
 
-
-		Future<String> future = executor.submit(myCallable);
-//		completionService.submit(myCallable);
-		String result="2";
-
-		try {
-//			while (!future.isDone()){
-//				Thread.currentThread().sleep(5000);
-//			}
-			result=future.get();
-
-//			result=completionService.poll().get();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-
-		logger.info("处理线程>>>>>"+Thread.currentThread().getName());
-		return result;
+		executor.execute(runnable);
 	}
 
 
@@ -171,7 +151,7 @@ public class SnapshotServiceImpl implements ISnapshotService{
 
 				process.waitFor();
 				logger.info("webUrl=" + webUrlOri + ";iecapt截取返回值:" + process.exitValue());
-//				process.destroy();
+				process.destroy();
 				logger.info("endtime:"+new Date().getTime());
 			} catch (Exception e) {
 				try {
